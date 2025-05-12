@@ -1,0 +1,30 @@
+{
+  "name": "idpromogroup/laravel-openai-assistants",
+  "description": "Laravel package for OpenAI Assistants API integration.",
+  "type": "laravel-package",
+  "autoload": {
+    "psr-4": {
+      "idpromogroup\\LaravelOpenAIAssistants\\": "src/"
+    }
+  },
+  "authors": [
+    {
+      "name": "IDPromoGroup",
+      "email": "idpromogroup@gmail.com"
+    }
+  ],
+  "minimum-stability": "dev",
+  "require": {
+    "php": "^8.2",
+    "illuminate/support": "^10.0 || ^11.0",
+    "guzzlehttp/guzzle": "^7.0",
+    "openai/laravel": "^0.4"
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "idpromogroup\\LaravelOpenAIAssistants\\LaravelOpenAIAssistantsServiceProvider"
+      ]
+    }
+  }
+}
