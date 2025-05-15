@@ -1,30 +1,31 @@
 {
   "name": "idpromogroup/laravel-openai-assistants",
-  "description": "Laravel package for OpenAI Assistants API integration.",
-  "type": "laravel-package",
-  "autoload": {
-    "psr-4": {
-      "idpromogroup\\LaravelOpenAIAssistants\\": "src/"
-    }
-  },
-  "authors": [
-    {
-      "name": "IDPromoGroup",
-      "email": "idpromogroup@gmail.com"
-    }
-  ],
-  "minimum-stability": "dev",
+  "description": "Laravel wrapper for OpenAI Assistants + vector-store sync",
+  "type": "library",
+  "license": "MIT",
+  "authors": [{
+    "name": "Ilya Dubrovskii",
+    "email": "idpromogroup@gmail.com"
+  }],
+  "minimum-stability": "stable",
   "require": {
     "php": "^8.2",
-    "illuminate/support": "^10.0 || ^11.0",
-    "guzzlehttp/guzzle": "^7.0",
-    "openai/laravel": "^0.4"
+    "guzzlehttp/guzzle": "^7.8",
+    "illuminate/support": "^10.0|^11.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "Idpromogroup\\LaravelOpenAIAssistants\\": "src/"
+    }
   },
   "extra": {
     "laravel": {
       "providers": [
-        "idpromogroup\\LaravelOpenAIAssistants\\LaravelOpenAIAssistantsServiceProvider"
-      ]
+        "Idpromogroup\\LaravelOpenAIAssistants\\LaravelOpenAIAssistantsServiceProvider"
+      ],
+      "aliases": {
+        "OpenAIAssistants": "Idpromogroup\\LaravelOpenAIAssistants\\Facades\\OpenAIAssistants"
+      }
     }
   }
 }

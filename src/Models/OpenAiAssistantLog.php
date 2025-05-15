@@ -1,25 +1,26 @@
 <?php
 
-namespace Idpromogroup\LaravelOpenAIAssistants\Models;
+namespace Idpromogroup\LaravelOpenAIAssistants\Models; // Используй свой Vendor Name
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class AssistantLog extends Model
+class OpenAiAssistantLog extends Model // Новое имя класса
 {
     use HasFactory;
 
-    protected $table = 'open_ai_assistant_logs';
+    protected $table = 'open_ai_assistant_logs'; // Указываем имя таблицы
 
     protected $guarded = [];
 
     // Поля, которые должны быть преобразованы из JSON
     protected $casts = [
-        'input' => 'array', // Если input хранится как JSON
-        'output' => 'array', // Если output хранится как JSON
-        // 'error' => 'array', // Если error хранится как JSON
+        // Убедись, что input и output действительно хранятся как JSON в таблице
+        // В дампе ff они были text
+        // 'input' => 'array',
+        // 'output' => 'array',
     ];
 
     /**
@@ -27,7 +28,8 @@ class AssistantLog extends Model
      */
     public function functionCalls(): HasMany
     {
-        return $this->hasMany(AssistantFunctionCall::class, 'log_id');
+        // Обновлено имя модели в отношении
+        return $this->hasMany(OpenAiAssistantFunctionCall::class, 'log_id');
     }
 
     /**
@@ -35,7 +37,7 @@ class AssistantLog extends Model
      */
     public function assistantThread(): BelongsTo
     {
-        // Убедись, что поле 'openai_assistant_thread_id' существует и соответствует типу в миграции
+        // Обновлено имя модели в отношении
         return $this->belongsTo(OpenAIAssistantThread::class, 'openai_assistant_thread_id');
     }
 }

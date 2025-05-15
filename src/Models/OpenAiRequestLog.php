@@ -1,15 +1,15 @@
 <?php
 
-namespace Idpromogroup\LaravelOpenAIAssistants\Models;
+namespace Idpromogroup\LaravelOpenAIAssistants\Models; // Используй свой Vendor Name
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class RequestLog extends Model
+class OpenAiRequestLog extends Model // Новое имя класса
 {
     use HasFactory;
 
-    protected $table = 'open_ai_request_logs';
+    protected $table = 'open_ai_request_logs'; // Указываем имя таблицы
 
     protected $guarded = [];
 

@@ -1,18 +1,17 @@
 <?php
 
-namespace Idpromogroup\LaravelOpenAIAssistants\Models;
+namespace Idpromogroup\LaravelOpenAIAssistants\Models; // Используй свой Vendor Name
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class OpenAIAssistantProject extends Model
+class OpenAIAssistantProject extends Model // Имя класса остается
 {
-    use HasFactory; // Можно добавить для фабрик, если планируется тестирование
+    use HasFactory;
 
-    protected $table = 'open_ai_assistant_projects'; // Указываем имя таблицы
+    protected $table = 'open_ai_assistant_projects'; // Указываем имя таблицы (совпадает с соглашением)
 
-    // Разрешаем массовое присваивание для всех полей, кроме защищенных ($guarded)
     protected $guarded = [];
 
     /**
@@ -20,8 +19,9 @@ class OpenAIAssistantProject extends Model
      */
     public function gdocsFiles(): HasMany
     {
-        return $this->hasMany(AssistantProjectGdocsFile::class, 'openai_assistant_project_id');
+        // Обновлено имя модели в отношении
+        return $this->hasMany(OpenAiAssistantProjectGdocsFile::class, 'openai_assistant_project_id');
     }
 
-    // Дополнительные отношения или методы модели могут быть добавлены здесь
+    // Дополнительные отношения или методы могут быть здесь
 }

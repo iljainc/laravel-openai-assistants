@@ -1,55 +1,64 @@
 <?php
 
-namespace Idpromogroup\LaravelOpenAIAssistants; // Убедись, что это твой Vendor Name
+namespace Idpromogroup\LaravelOpenAIAssistants;
 
+use Idpromogroup\LaravelOpenAIAssistants\Services\OpenAIAPIService;
+use Idpromogroup\LaravelOpenAIAssistants\Services\OpenAIService;
+use Idpromogroup\LaravelOpenAIAssistants\Services\VectorStoreManagementService;
+use Illuminate\Foundation\AliasLoader;
 use Illuminate\Support\ServiceProvider;
 
 class LaravelOpenAIAssistantsServiceProvider extends ServiceProvider
 {
     /**
      * Register any application services.
-     *
-     * @return void
      */
     public function register(): void
     {
-        // Здесь регистрируются сервисы в контейнере Laravel
-        // Например: $this->app->singleton(OpenAIService::class, function ($app) { ... });
-        // Или загрузка файла конфигурации пакета
-        // $this->mergeConfigFrom(__DIR__.'/../config/openai-assistants.php', 'openai-assistants');
+        // Биндинг «дефолтного» клиента OpenAI
+        $this->app->bind(OpenAIAPIService::class, fn () =>
+            new OpenAIAPIService(config('openai-assistants.api_key'))
+        );
+
+        // Управление векторным хранилищем
+        $this->app->bind(VectorStoreManagementService::class, fn ($app) =>
+            new VectorStoreManagementService($app->make(OpenAIAPIService::class))
+        );
+
+        // Главный сервис ассистента
+        $this->app->bind(OpenAIService::class, function ($app) {
+            $logicClass = config('openai-assistants.logic_service');
+            return new OpenAIService(
+                $app->make(OpenAIAPIService::class),   // уже с ключом из конфига
+                $app->make($logicClass)
+            );
+        });
+
+        $this->mergeConfigFrom(
+            __DIR__ . '/../config/openai-assistants.php',
+            'openai-assistants'
+        );
     }
 
     /**
      * Bootstrap any package services.
-     *
-     * @return void
      */
     public function boot(): void
     {
-        // Загрузка миграций пакета
-        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+        $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
 
-        // Здесь можно публиковать ресурсы пакета:
-        // Конфигурация:
-        // $this->publishes([
-        //     __DIR__.'/../config/openai-assistants.php' => config_path('openai-assistants.php'),
-        // ], 'openai-assistants-config');
+        $this->publishes([
+            __DIR__ . '/../config/openai-assistants.php' => config_path('openai-assistants.php'),
+        ], 'openai-assistants-config');
 
-        // Миграции (хотя loadMigrationsFrom часто достаточно, publish позволяет копировать файлы)
-        // $this->publishes([
-        //     __DIR__.'/../database/migrations/' => database_path('migrations'),
-        // ], 'openai-assistants-migrations');
+        require __DIR__ . '/helpers.php';
 
-        // Загрузка роутов пакета:
-        // $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
-        // $this->loadRoutesFrom(__DIR__.'/../routes/api.php');
-
-        // Загрузка представлений (views):
-        // $this->loadViewsFrom(__DIR__.'/../resources/views', 'openai-assistants');
-
-        // Публикация представлений:
-        // $this->publishes([
-        //     __DIR__.'/../resources/views' => resource_path('views/vendor/openai-assistants'),
-        // ], 'openai-assistants-views');
+        // Регистрация фасада
+        $this->app->booting(function () {
+            AliasLoader::getInstance()->alias(
+                'OpenAIAssistants',
+                \Idpromogroup\LaravelOpenAIAssistants\Facades\OpenAIAssistants::class
+            );
+        });
     }
 }
