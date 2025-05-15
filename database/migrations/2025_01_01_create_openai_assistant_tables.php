@@ -16,8 +16,6 @@ return new class extends Migration
             Schema::create('open_ai_assistant_projects', function (Blueprint $table) {
                 $table->id();
                 $table->string('project_name');
-                $table->string('telegram_api_key')->nullable();
-                $table->string('telegram_secret_token')->nullable();
                 $table->string('openai_api_key')->nullable();
                 $table->string('openai_assistant_id');
                 $table->unsignedBigInteger('user_id')->nullable();
@@ -28,12 +26,6 @@ return new class extends Migration
             Schema::table('open_ai_assistant_projects', function (Blueprint $table) {
                 if (!Schema::hasColumn('open_ai_assistant_projects', 'project_name')) {
                     $table->string('project_name')->after('id'); // Пример: добавить после id
-                }
-                if (!Schema::hasColumn('open_ai_assistant_projects', 'telegram_api_key')) {
-                    $table->string('telegram_api_key')->nullable()->after('project_name');
-                }
-                if (!Schema::hasColumn('open_ai_assistant_projects', 'telegram_secret_token')) {
-                    $table->string('telegram_secret_token')->nullable()->after('telegram_api_key');
                 }
                 if (!Schema::hasColumn('open_ai_assistant_projects', 'openai_api_key')) {
                     $table->string('openai_api_key')->nullable()->after('telegram_secret_token');

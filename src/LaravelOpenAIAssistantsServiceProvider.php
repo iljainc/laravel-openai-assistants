@@ -53,6 +53,12 @@ class LaravelOpenAIAssistantsServiceProvider extends ServiceProvider
 
         require __DIR__ . '/helpers.php';
 
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                \Idpromogroup\LaravelOpenAIAssistants\Console\Commands\UploadGdocsToOpenAI::class,
+            ]);
+        }
+
         // Регистрация фасада
         $this->app->booting(function () {
             AliasLoader::getInstance()->alias(
