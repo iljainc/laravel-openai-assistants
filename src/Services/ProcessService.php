@@ -44,6 +44,22 @@ class ProcessService
     {
         assistant_debug("ProcessService::init() - Channel: {$channel}, User ID: {$userId}, Message ID: {$msgId}, Request: {$requestText}");
 
+        if (empty($userId) && empty($msgId)) {
+            $this->requestLog = OpenAiRequestLog::create([
+                'channel' => $channel,
+                'user_id' => $userId, // unsignedBigInteger
+                'msg_id' => $msgId, // unsignedBigInteger
+                'request' => $requestText,
+                'pid' => $this->pid,
+                // Статус in_progress при создании, как в твоем исходном коде
+                'status' => self::STATUS_IN_PROGRESS,
+            ]);
+
+            assistant_debug("ProcessService::init() - empty $userId && $msgId - return true");
+
+            return true;
+        }
+
         // Получаем запись по ключу, независимо от статуса
         // >>> Изменено на новое имя модели RequestLog -> OpenAiRequestLog <<<
         $request = OpenAiRequestLog::where('channel', $channel)

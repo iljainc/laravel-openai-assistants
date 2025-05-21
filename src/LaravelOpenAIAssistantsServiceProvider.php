@@ -15,6 +15,18 @@ class LaravelOpenAIAssistantsServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        if (!config()->has('openai-assistants')) {
+            throw new \RuntimeException(
+                'Missing config file: please publish the package config using `php artisan vendor:publish --tag=openai-assistants-config`'
+            );
+        }
+
+        if (empty(config('openai-assistants.api_key'))) {
+            throw new \RuntimeException(
+                'Missing OpenAI API key: please set OPENAI_API_KEY in your .env file or openai-assistants.php config.'
+            );
+        }
+
         // Биндинг «дефолтного» клиента OpenAI
         $this->app->bind(OpenAIAPIService::class, fn () =>
             new OpenAIAPIService(config('openai-assistants.api_key'))
