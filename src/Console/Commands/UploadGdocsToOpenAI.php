@@ -31,5 +31,7 @@ class UploadGdocsToOpenAI extends Command
         }
 
         $this->info("Complete");
+
+        return 0;
     }
 }

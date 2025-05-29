@@ -35,7 +35,19 @@ class OpenAIAPIService
     {
         try {
             $response = $this->client->request($method, $uri, $options);
-            return json_decode($response->getBody(), true);
+            $decoded = json_decode($response->getBody(), true);
+
+            // 🔥 Добавляем лог, если в теле есть ошибка
+            if (isset($decoded['error'])) {
+                Log::error('OpenAI API Response Contains Error', [
+                    'method'  => $method,
+                    'uri'     => $uri,
+                    'opts'    => $options,
+                    'error'   => $decoded['error'],
+                ]);
+            }
+
+            return $decoded;
         } catch (RequestException $e) {
             $body = $e->hasResponse() ? $e->getResponse()->getBody()->getContents() : null;
             Log::error('OpenAI API Request Error', [

@@ -4,7 +4,8 @@ namespace Idpromogroup\LaravelOpenAIAssistants\Services;
 
 use Idpromogroup\LaravelOpenAIAssistants\Models\AssistantFunctionCall;
 use Idpromogroup\LaravelOpenAIAssistants\Models\OpenAiAssistantLog;
-use Idpromogroup\LaravelOpenAIAssistantThread;
+use Idpromogroup\LaravelOpenAIAssistants\Models\OpenAIAssistantThread;
+
 use Illuminate\Support\Facades\Log;
 
 class OpenAIService
@@ -28,7 +29,7 @@ class OpenAIService
         string $channel = 'api',
         int    $userId  = 0,
         int    $msgId   = 0
-    ): ?string {
+    ) {
         $res = $this->assistantGet($assistantId, $text, $channel, $userId, $msgId);
         return $res['data'][0]['content'][0]['text']['value']
             ?? ($res['status'] ?? 'System error');
@@ -40,8 +41,10 @@ class OpenAIService
         string $channel = 'api',
         int    $userId  = 0,
         int    $msgId   = 0
-    ): ?array {
-        return $this->assistantGet($assistantId, $text, $channel, $userId, $msgId, false);
+    ) {
+        $res = $this->assistantGet($assistantId, $text, $channel, $userId, $msgId, false);
+
+        return $res['data'][0]["content"][0]["text"]["value"] ?? 'System error';
     }
 
     public function assistantJSON(
@@ -49,9 +52,10 @@ class OpenAIService
         string $text,
         string $channel = 'api',
         int    $userId  = 0,
-        int    $msgId   = 0
-    ): ?array {
-        $output = $this->assistantGet($assistantId, $text, $channel, $userId, $msgId);
+        int    $msgId   = 0,
+        bool   $useThread = true
+    ) {
+        $output = $this->assistantGet($assistantId, $text, $channel, $userId, $msgId, $useThread);
         if ($output['status'] ?? null === 'Already in work') {
             return $output;
         }
@@ -70,7 +74,7 @@ class OpenAIService
         int     $userId,
         int     $msgId,
         bool    $useThread = true
-    ): ?array {
+    ) {
         $apiKey              = config('openai-assistants.api_key');
         $this->apiService    = new OpenAIAPIService($apiKey);
 
@@ -96,6 +100,7 @@ class OpenAIService
 
         if (! $thread) {
             $threadData = $this->apiService->createThread();
+
             $thread     = OpenAIAssistantThread::create([
                 'assistant_id' => $assistantId,
                 'user_id'      => $userId,
@@ -127,6 +132,8 @@ class OpenAIService
             $thread->run_id   = $runResponse['id'] ?? null;
             $thread->save();
         }
+
+        assistant_debug("OpenAIService::assistantGet() - init run ".($thread->run_id ?? 'false'));
 
         $res = '';
         if ($thread->run_id) {
