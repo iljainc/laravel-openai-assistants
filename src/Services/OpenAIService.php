@@ -5,6 +5,7 @@ namespace Idpromogroup\LaravelOpenAIAssistants\Services;
 use Idpromogroup\LaravelOpenAIAssistants\Models\AssistantFunctionCall;
 use Idpromogroup\LaravelOpenAIAssistants\Models\OpenAiAssistantLog;
 use Idpromogroup\LaravelOpenAIAssistants\Models\OpenAIAssistantThread;
+use Idpromogroup\LaravelOpenAIAssistants\Models\OpenAIAssistantProject;
 
 use Illuminate\Support\Facades\Log;
 
