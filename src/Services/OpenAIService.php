@@ -67,6 +67,61 @@ class OpenAIService
      |  CORE
      |------------------------------------------------------------------- */
 
+    public function createAssistant(array $data): OpenAIAssistantProject
+    {
+        $response = $this->apiService->sendRequest('POST', 'assistants', [
+            'json' => [
+                'name'         => $data['name'] ?? null,
+                'instructions' => $data['instructions'] ?? '',
+                'model'        => $data['model'] ?? 'gpt-4o',
+                'tools'        => $data['tools'] ?? [],
+                'metadata'     => $data['metadata'] ?? [],
+            ],
+        ]);
+
+        $project = OpenAIAssistantProject::create([
+            'name'                => $response['name'] ?? $data['name'] ?? null,
+            'instructions'        => $response['instructions'] ?? $data['instructions'] ?? '',
+            'model'               => $response['model'] ?? $data['model'] ?? 'gpt-4o',
+            'tools'               => $response['tools'] ?? $data['tools'] ?? [],
+            'metadata'            => $response['metadata'] ?? $data['metadata'] ?? [],
+            'openai_assistant_id' => $response['id'],
+            'openai_api_key'      => $data['openai_api_key'] ?? null,
+            'user_id'             => $data['user_id'] ?? null,
+        ]);
+
+        $project->logState();
+
+        return $project;
+    }
+
+    public function updateAssistant(OpenAIAssistantProject $project, array $data): OpenAIAssistantProject
+    {
+        $payload = [
+            'name'         => $data['name']         ?? $project->name,
+            'instructions' => $data['instructions'] ?? $project->instructions,
+            'model'        => $data['model']        ?? $project->model,
+            'tools'        => $data['tools']        ?? $project->tools,
+            'metadata'     => $data['metadata']     ?? $project->metadata,
+        ];
+
+        $response = $this->apiService->sendRequest('POST', "assistants/{$project->openai_assistant_id}", [
+            'json' => $payload,
+        ]);
+
+        $project->update([
+            'name'         => $response['name']         ?? $payload['name'],
+            'instructions' => $response['instructions'] ?? $payload['instructions'],
+            'model'        => $response['model']        ?? $payload['model'],
+            'tools'        => $response['tools']        ?? $payload['tools'],
+            'metadata'     => $response['metadata']     ?? $payload['metadata'],
+        ]);
+
+        $project->logState();
+
+        return $project;
+    }
+
     private function assistantGet(
         string  $assistantId,
         string  $text,

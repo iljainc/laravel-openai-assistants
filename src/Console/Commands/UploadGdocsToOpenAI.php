@@ -27,7 +27,7 @@ class UploadGdocsToOpenAI extends Command
 
             $vectorStoreSrv->manageAssistantVectorStore($project, $this);
 
-            $this->info("▲ Done: {$project->project_name}\n");
+            $this->info("▲ Done: {$project->name}\n");
         }
 
         $this->info("Complete");
