@@ -8,8 +8,8 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('open_ai_assistant_projects', function (Blueprint $table) {
-            if (!Schema::hasColumn('open_ai_assistant_projects', 'name')) {
-                $table->string('name')->nullable()->after('project_name');
+            if (Schema::hasColumn('open_ai_assistant_projects', 'project_name') && !Schema::hasColumn('open_ai_assistant_projects', 'name')) {
+                $table->renameColumn('project_name', 'name');
             }
             if (!Schema::hasColumn('open_ai_assistant_projects', 'instructions')) {
                 $table->text('instructions')->nullable()->after('name');
