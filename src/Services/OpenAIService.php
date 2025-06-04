@@ -70,15 +70,24 @@ class OpenAIService
 
     public function createAssistant(array $data): OpenAIAssistantProject
     {
-        $response = $this->apiService->sendRequest('POST', 'assistants', [
-            'json' => [
-                'name'         => $data['name'] ?? null,
-                'instructions' => $data['instructions'] ?? '',
-                'model'        => $data['model'] ?? 'gpt-4o',
-                'tools'        => $data['tools'] ?? [],
-                'metadata'     => $data['metadata'] ?? [],
-            ],
-        ]);
+        try {
+            $response = $this->apiService->sendRequest('POST', 'assistants', [
+                'json' => [
+                    'name'         => $data['name'] ?? null,
+                    'instructions' => $data['instructions'] ?? '',
+                    'model'        => $data['model'] ?? 'gpt-4o',
+                    'tools'        => $data['tools'] ?? [],
+                    'metadata'     => $data['metadata'] ?? [],
+                ],
+            ]);
+        } catch (\GuzzleHttp\Exception\GuzzleException $e) {
+            throw new \RuntimeException('OpenAI API request failed: ' . $e->getMessage());
+        }
+
+        // Если API вернул поле "error" внутри $response, тоже бросаем
+        if (isset($response['error'])) {
+            throw new \RuntimeException('OpenAI error: ' . $response['error']['message']);
+        }
 
         $project = OpenAIAssistantProject::create([
             'name'                => $response['name'] ?? $data['name'] ?? null,

@@ -14,6 +14,12 @@ class OpenAIAssistantProject extends Model // Имя класса остаетс
 
     protected $guarded = [];
 
+    // Приводим поля tools и metadata к/из JSON автоматически
+    protected $casts = [
+        'tools'    => 'array',
+        'metadata' => 'array',
+    ];
+
     /**
      * Получить файлы Google Docs для проекта.
      */
