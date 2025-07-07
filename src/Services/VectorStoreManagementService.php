@@ -204,7 +204,10 @@ class VectorStoreManagementService
                     }
                 }
             }
-            return null; // Если это URL, но не Google Docs, или не удалось скачать
+
+            // Любые другие URL
+            $response = Http::get($fileIdOrUrl);
+            return $response->successful() ? $response->body() : null;
         } else {
             // Если это не URL, предполагаем, что это ID файла (может быть, локального?) - пока не обрабатываем
             return null;
