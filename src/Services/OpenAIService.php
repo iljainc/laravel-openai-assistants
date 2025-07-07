@@ -140,7 +140,7 @@ class OpenAIService
         int     $msgId,
         bool    $useThread = true
     ) {
-        assistant_debug("OpenAIService::assistantGet() - INIT assistantId = $assistantId, $text = $text, $channel = $channel, $userId = $userId, $msgId = $msgId");
+        assistant_debug("OpenAIService::assistantGet() - INIT assistantId = $assistantId, text = $text, channel = $channel, userId = $userId, msgId = $msgId");
 
         $apiKey              = config('openai-assistants.api_key');
         $this->apiService    = new OpenAIAPIService($apiKey);
