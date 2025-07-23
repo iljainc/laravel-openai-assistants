@@ -90,4 +90,9 @@ class OpenAIAPIService
     {
         return $this->sendRequest('GET', "threads/{$threadId}/runs/{$runId}");
     }
+    
+    public function getThreadMessages(string $threadId): ?array
+    {
+        return $this->sendRequest('GET', "threads/{$threadId}/messages");
+    }
 }
