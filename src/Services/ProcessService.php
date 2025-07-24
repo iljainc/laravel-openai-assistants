@@ -42,7 +42,6 @@ class ProcessService
      */
     public function init($channel, $userId, $msgId, $requestText): bool
     {
-        assistant_debug("----------------------------------------------");
         assistant_debug("ProcessService::init() - Channel: {$channel}, User ID: {$userId}, Message ID: {$msgId}, Request: {$requestText}");
 
         if (empty($userId) && empty($msgId)) {
@@ -73,11 +72,14 @@ class ProcessService
 
         if ($request) {
             $lastUpdated = Carbon::parse($request->updated_at);
-            assistant_debug("ProcessService::init() - Found existing request. Last updated: {$lastUpdated->toDateTimeString()}");
+            $currentTimestamp = $currentTime->timestamp;
+            $lastUpdatedTimestamp = $lastUpdated->timestamp;
+            $diff = $currentTimestamp - $lastUpdatedTimestamp;
+            assistant_debug("ProcessService::init() - Debug: Now: {$currentTime->toDateTimeString()} ({$currentTimestamp}), Last updated: {$lastUpdated->toDateTimeString()} ({$lastUpdatedTimestamp}), Diff: {$diff} seconds");
 
             // Проверяем, если обновляли менее 2 секунд назад.
             // Если да, это очень быстрый повтор, не берем в работу СЕЙЧАС.
-            if ($currentTime->diffInSeconds($lastUpdated) < 2) {
+            if ($diff < 2) {
                 assistant_debug("ProcessService::init() - Request updated less than 2 seconds ago, considering active. Exiting.");
                 return false; // Отключаемся
             }
