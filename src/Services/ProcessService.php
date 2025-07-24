@@ -42,6 +42,7 @@ class ProcessService
      */
     public function init($channel, $userId, $msgId, $requestText): bool
     {
+        assistant_debug("----------------------------------------------");
         assistant_debug("ProcessService::init() - Channel: {$channel}, User ID: {$userId}, Message ID: {$msgId}, Request: {$requestText}");
 
         if (empty($userId) && empty($msgId)) {
@@ -61,7 +62,6 @@ class ProcessService
         }
 
         // Получаем запись по ключу, независимо от статуса
-        // >>> Изменено на новое имя модели RequestLog -> OpenAiRequestLog <<<
         $request = OpenAiRequestLog::where('channel', $channel)
             ->where('user_id', $userId)
             ->where('msg_id', $msgId)
@@ -78,8 +78,6 @@ class ProcessService
             // Проверяем, если обновляли менее 2 секунд назад.
             // Если да, это очень быстрый повтор, не берем в работу СЕЙЧАС.
             if ($currentTime->diffInSeconds($lastUpdated) < 2) {
-                // Добавляем комментарий о получении быстрого повторного запроса к существующей записи
-                $this->comment("ProcessService::init - Запрос найден. Обновлен менее 2 сек назад. Считаю активным, отключаюсь.");
                 assistant_debug("ProcessService::init() - Request updated less than 2 seconds ago, considering active. Exiting.");
                 return false; // Отключаемся
             }
