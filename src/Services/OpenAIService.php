@@ -45,7 +45,10 @@ class OpenAIService
     ) {
         $res = $this->assistantGet($assistantId, $text, $channel, $userId, $msgId, false);
 
-        return $res['data'][0]["content"][0]["text"]["value"] ?? 'System error';
+        assistant_debug("OpenAIService::assistantNoThread() return: ".($res['data'][0]["content"][0]["text"]["value"] ?? false));
+
+
+        return $res['data'][0]["content"][0]["text"]["value"] ?? false;
     }
 
     public function assistantJSON(
@@ -140,14 +143,14 @@ class OpenAIService
         int     $msgId,
         bool    $useThread = true
     ) {
-        assistant_debug("OpenAIService::assistantGet() - INIT assistantId = $assistantId, text = $text, channel = $channel, userId = $userId, msgId = $msgId");
+        assistant_debug("OpenAIService::assistantGet() - INIT assistantId = $assistantId, channel = $channel, userId = $userId, msgId = $msgId");
 
         $apiKey              = config('openai-assistants.api_key');
         $this->apiService    = new OpenAIAPIService($apiKey);
 
         $processService      = app(ProcessService::class);
         if (! $processService->init($channel, $userId, $msgId, $text)) {
-            return ['status' => 'Already in work'];
+            return false;
         }
 
         $startTime = round(microtime(true) * 1000);
@@ -194,6 +197,7 @@ class OpenAIService
         }
 
         if (! $thread->run_id) {
+            assistant_debug("OpenAIService::assistantGet() - add run");
             $this->apiService->addMessageToThread($thread->thread_id, 'user', $text);
             $runResponse      = $this->apiService->runThread($thread->thread_id, $assistantId);
             $thread->run_id   = $runResponse['id'] ?? null;
@@ -213,6 +217,9 @@ class OpenAIService
                     $res = $this->apiService->getThreadMessages($thread->thread_id);
                     if (($res['data'][0]['role'] ?? null) === 'assistant') {
                         $thread->update(['run_id' => null]);
+
+                        $this->finalizeLog($log, $startTime, json_encode($res));
+
                         break;
                     }
                 }
@@ -222,16 +229,18 @@ class OpenAIService
                 }
 
                 if (in_array($run['status'], ['cancelled', 'expired', 'failed'])) {
-                    $this->finalizeLog($log, $startTime, 'Error status: '.$run['status']);
+                    $this->finalizeLog($log, $startTime, '', 'Error status: '.$run['status']);
                     $processService->close();
                     return null;
                 }
 
                 usleep(300_000); // 0.3 s
             }
+        } else {
+            $res = '';
+            $this->finalizeLog($log, $startTime, '', 'Run not found');
         }
 
-        $this->finalizeLog($log, $startTime, json_encode($res));
         $processService->close();
         return $res;
     }
@@ -250,14 +259,18 @@ class OpenAIService
         return json_decode($response, true);
     }
 
-    private function finalizeLog(OpenAiAssistantLog $log, int $start, string $output): void
+    private function finalizeLog(OpenAiAssistantLog $log, int $start, string $output, string $error = null): void
     {
         $end = round(microtime(true) * 1000);
-        $log->update([
+        $update = [
             'output'          => $output,
             'execution_time'  => round(($end - $start) / 1000, 2),
             'end_time_ms'     => $end,
-        ]);
+        ];
+        if ($error !== null) {
+            $update['error'] = $error;
+        }
+        $log->update($update);
     }
 
     private function handleFunctionCall(

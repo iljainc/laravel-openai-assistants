@@ -42,45 +42,28 @@ class ProcessService
      */
     public function init($channel, $userId, $msgId, $requestText): bool
     {
-        assistant_debug("ProcessService::init() - Channel: {$channel}, User ID: {$userId}, Message ID: {$msgId}, Request: {$requestText}");
+        assistant_debug("ProcessService::init() - Channel: {$channel}, User ID: {$userId}, Message ID: {$msgId}");
 
-        if (empty($userId) && empty($msgId)) {
-            $this->requestLog = OpenAiRequestLog::create([
-                'channel' => $channel,
-                'user_id' => $userId, // unsignedBigInteger
-                'msg_id' => $msgId, // unsignedBigInteger
-                'request' => $requestText,
-                'pid' => $this->pid,
-                // Статус in_progress при создании, как в твоем исходном коде
-                'status' => self::STATUS_IN_PROGRESS,
-            ]);
-
-            assistant_debug("ProcessService::init() - empty $userId && $msgId - return true");
-
-            return true;
-        }
-
-        // Получаем запись по ключу, независимо от статуса
         $request = OpenAiRequestLog::where('channel', $channel)
             ->where('user_id', $userId)
             ->where('msg_id', $msgId)
+            ->whereNotIn('status', [OpenAiRequestLog::STATUS_COMPLETED, OpenAiRequestLog::STATUS_FAILED])
             ->first();
 
-        $this->requestLog = $request;
-
-        $currentTime = Carbon::now();
-
         if ($request) {
+            $this->requestLog = $request;
+    
+            $currentTime = Carbon::now();
             $lastUpdated = Carbon::parse($request->updated_at);
             $currentTimestamp = $currentTime->timestamp;
             $lastUpdatedTimestamp = $lastUpdated->timestamp;
             $diff = $currentTimestamp - $lastUpdatedTimestamp;
-            assistant_debug("ProcessService::init() - Debug: Now: {$currentTime->toDateTimeString()} ({$currentTimestamp}), Last updated: {$lastUpdated->toDateTimeString()} ({$lastUpdatedTimestamp}), Diff: {$diff} seconds");
+            assistant_debug("ProcessService::init() - Debug: Now: {$currentTime->toDateTimeString()}, Last updated: {$lastUpdated->toDateTimeString()}, Diff: {$diff} seconds");
 
             // Проверяем, если обновляли менее 2 секунд назад.
             // Если да, это очень быстрый повтор, не берем в работу СЕЙЧАС.
             if ($diff < 2) {
-                assistant_debug("ProcessService::init() - Request updated less than 2 seconds ago, considering active. Exiting.");
+                assistant_debug_error("ProcessService::init() - Request updated less than 2 seconds ago, considering active. Exiting.");
                 return false; // Отключаемся
             }
 
@@ -90,8 +73,8 @@ class ProcessService
                 'pid' => $this->pid,
                 'status' => self::STATUS_IN_PROGRESS, // Снова устанавливаем in_progress при взятии в работу
             ]);
-            $this->comment('ProcessService::init - Обнаружен существующий устаревший запрос. Взят в работу этим PID.');
-            assistant_debug("ProcessService::init() - Found outdated request. Taking over with PID: {$this->pid}.");
+            assistant_debug("ProcessService::init() - Found outdated request.");
+            $this->comment('ProcessService::init - init work for outdated request');
             return true; // Берем в работу
 
         } else {
@@ -107,7 +90,7 @@ class ProcessService
                 'status' => self::STATUS_IN_PROGRESS,
             ]);
 
-            $this->comment('ProcessService::init - Новый запрос взят в работу');
+            $this->comment('ProcessService::init - init work for new request');
             assistant_debug("ProcessService::init() - New request taken over with PID: {$this->pid}.");
 
             return true; // Берем в работу

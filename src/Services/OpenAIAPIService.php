@@ -50,6 +50,13 @@ class OpenAIAPIService
                     'opts'    => $options,
                     'error'   => $decoded['error'],
                 ]);
+
+                assistant_debug_error([
+                    'method'  => $method,
+                    'uri'     => $uri,
+                    'opts'    => $options,
+                    'error'   => $decoded['error'],
+                ]);
             }
             return $decoded;
         } catch (\Throwable $e) {
