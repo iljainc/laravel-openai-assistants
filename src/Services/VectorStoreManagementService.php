@@ -61,8 +61,17 @@ class VectorStoreManagementService
             $currentFileHash = md5($fileContent);
 
             if ($gdocsFile->gdocs_file_hash !== $currentFileHash) {
-                $filePath = storage_path('app/gdocs_file_' . $gdocsFile->id . '.' . $gdocsFile->file_type);
-                file_put_contents($filePath, $fileContent);
+                // Проверяем, является ли это локальным файлом
+                $isLocalFile = !filter_var($gdocsFile->file_url, FILTER_VALIDATE_URL) && file_exists($gdocsFile->file_url);
+                
+                if ($isLocalFile) {
+                    // Используем существующий файл напрямую
+                    $filePath = $gdocsFile->file_url;
+                } else {
+                    // Создаем временный файл для URL
+                    $filePath = storage_path('app/gdocs_file_' . $gdocsFile->id . '.' . $gdocsFile->file_type);
+                    file_put_contents($filePath, $fileContent);
+                }
 
                 $uploadedFile = $this->uploadFileToOpenAI($filePath, 'assistants');
                 if (isset($uploadedFile['id'])) {
@@ -78,11 +87,12 @@ class VectorStoreManagementService
                     assistant_debug('Failed to upload file.', $uploadedFile ?? []);
                 }
 
-                if (file_exists($filePath)) {
+                // Удаляем временный файл только если он был создан
+                if (!$isLocalFile && file_exists($filePath)) {
                     unlink($filePath);
                     if ($command) $command->info("Temporary file deleted.");
                     assistant_debug("Temporary file deleted: {$filePath}");
-                };
+                }
             } else {
                 if ($command) $command->info("{$gdocsFile->file_url} has not changed.");
                 assistant_debug("{$gdocsFile->file_url} has not changed.");
@@ -209,7 +219,12 @@ class VectorStoreManagementService
             $response = Http::get($fileIdOrUrl);
             return $response->successful() ? $response->body() : null;
         } else {
-            // Если это не URL, предполагаем, что это ID файла (может быть, локального?) - пока не обрабатываем
+            // Проверяем, является ли это путем к локальному файлу
+            if (file_exists($fileIdOrUrl)) {
+                return file_get_contents($fileIdOrUrl);
+            }
+            
+            // Если это не URL и не локальный файл, возвращаем null
             return null;
         }
     }
