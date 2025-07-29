@@ -3,12 +3,13 @@
 namespace Idpromogroup\LaravelOpenAIAssistants\Services;
 
 use function config;
-use Illuminate\Support\Facades\Http;
+use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Log;
 
 class OpenAIAPIService
 {
     private string $apiKey;
+    private Client $client;
 
     /**
      * Ключ не обязателен: если не передали – берём из конфига.
@@ -16,6 +17,13 @@ class OpenAIAPIService
     public function __construct(?string $apiKey = null)
     {
         $this->apiKey = $apiKey ?? config('openai-assistants.api_key');
+        $this->client = new Client([
+            'base_uri' => 'https://api.openai.com/v1/',
+            'headers' => [
+                'Authorization' => 'Bearer ' . $this->apiKey,
+                'OpenAI-Beta' => 'assistants=v2'
+            ]
+        ]);
     }
 
     /* ------------------------------------------------------------------ */
@@ -24,25 +32,10 @@ class OpenAIAPIService
 
     public function sendRequest(string $method, string $uri, array $options = []): ?array
     {
-        $baseUri = 'https://api.openai.com/v1/';
-        $headers = [
-            'Authorization' => 'Bearer ' . $this->apiKey,
-            'OpenAI-Beta'   => 'assistants=v2',
-        ];
-        if (isset($options['headers'])) {
-            $headers = array_merge($headers, $options['headers']);
-        }
-        $url = $baseUri . ltrim($uri, '/');
         try {
-            $response = match (strtoupper($method)) {
-                'GET'    => Http::withHeaders($headers)->get($url, $options['query'] ?? []),
-                'POST'   => Http::withHeaders($headers)->post($url, $options['json'] ?? ($options['form_params'] ?? [])),
-                'PUT'    => Http::withHeaders($headers)->put($url, $options['json'] ?? ($options['form_params'] ?? [])),
-                'PATCH'  => Http::withHeaders($headers)->patch($url, $options['json'] ?? ($options['form_params'] ?? [])),
-                'DELETE' => Http::withHeaders($headers)->delete($url, $options['json'] ?? ($options['form_params'] ?? [])),
-                default  => throw new \InvalidArgumentException('Unsupported HTTP method'),
-            };
-            $decoded = $response->json();
+            $response = $this->client->request($method, $uri, $options);
+            $decoded = json_decode($response->getBody()->getContents(), true);
+            
             if (isset($decoded['error'])) {
                 Log::error('OpenAI API Response Contains Error', [
                     'method'  => $method,

@@ -2,7 +2,7 @@
 
 namespace Idpromogroup\LaravelOpenAIAssistants\Services;
 
-use Idpromogroup\LaravelOpenAIAssistants\Models\AssistantFunctionCall;
+use Idpromogroup\LaravelOpenAIAssistants\Models\OpenAiAssistantFunctionCall;
 use Idpromogroup\LaravelOpenAIAssistants\Models\OpenAiAssistantLog;
 use Idpromogroup\LaravelOpenAIAssistants\Models\OpenAIAssistantThread;
 use Idpromogroup\LaravelOpenAIAssistants\Models\OpenAIAssistantProject;
@@ -287,7 +287,7 @@ class OpenAIService
             $functionName   = $call['function']['name'];
             $argumentsJson  = $call['function']['arguments'];
 
-            $functionLog = AssistantFunctionCall::create([
+            $functionLog = OpenAiAssistantFunctionCall::create([
                 'log_id'        => $log->id,
                 'run_id'        => $thread->run_id,
                 'function_name' => $functionName,
